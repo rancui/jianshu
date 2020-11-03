@@ -1,78 +1,71 @@
 import React, { Component } from "react";
-import TodoItem from "./TodoItem";
-import "./style.css";
+import "antd/dist/antd.css";
+import { Input, Button, List } from "antd";
+import store from "./store";
 
 class TodoList extends Component {
   constructor(props) {
     super(props);
-    this.state = {
-      inputValue: "",
-      list: ["hello", "world"],
-    };
+    this.state = store.getState();
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleAddItem = this.handleAddItem.bind(this);
-    // this.handleRemoveItem = this.handleRemoveItem.bind(this);
+    this.handleStoreChange = this.handleStoreChange.bind(this);
+    store.subscribe(this.handleStoreChange);
   }
-
   render() {
     return (
       <div>
         <div>
-          <input
-            className="input"
+          <Input
             value={this.state.inputValue}
+            placeholder="Basic usage"
+            style={{ width: 300 }}
             onChange={this.handleInputChange}
           />
-          <button onClick={this.handleAddItem}>提交</button>
+          <Button type="primary" onClick={this.handleAddItem}>
+            Primary Button
+          </Button>
+          <List
+            bordered
+            dataSource={this.state.list}
+            renderItem={(item, index) => (
+              <List.Item onClick={this.handleRemoveItem.bind(this, index)}>
+                {item}
+              </List.Item>
+            )}
+            style={{ width: 300 }}
+          />
         </div>
-        <ul>
-          {this.state.list.map((item, index) => {
-            return (
-              <TodoItem
-                content={item}
-                key={item}
-                index={index}
-                deleteItem={(index) => this.handleRemoveItem(this, index)}
-              ></TodoItem>
-            );
-          })}
-        </ul>
       </div>
     );
   }
   handleInputChange(e) {
-    //传统方法
-    // this.setState({
-    //   inputValue: e.target.value,
-    // });
-    // 新方法
-    const value = e.target.value; // 必须先把e.target.value保存一下，否则会报错，因为this.setState(）是异步的；
-    this.setState(() => ({
-      inputValue: value,
-    }));
+    console.log(e.target.value);
+    const action = {
+      type: "input_change",
+      value: e.target.value,
+    };
+    store.dispatch(action);
   }
-  handleAddItem() {
-    //传统方法
-    // this.setState({
-    //   list: [...this.state.list, this.state.inputValue],
-    // });
-    this.setState((prevState) => ({
-      list: [...prevState.list, prevState.inputValue],
-      inputValue: "",
-    }));
+  handleAddItem(e) {
+    const action = {
+      type: "add_item",
+      value: e.target.value,
+    };
+    if (e.target.value === "") {
+      return;
+    }
+    store.dispatch(action);
   }
   handleRemoveItem(index) {
-    // const newList = [...this.state.list];
-    // newList.splice(index, 1);
-    // this.setState({
-    //   list: newList,
-    // });
-    //新方法
-    this.setState((prevState) => {
-      const list = [...prevState.list];
-      list.splice(index, 1);
-      return { list };
-    });
+    const action = {
+      type: "remove_item",
+      index,
+    };
+    store.dispatch(action);
+  }
+  handleStoreChange() {
+    this.setState(store.getState);
   }
 }
 
